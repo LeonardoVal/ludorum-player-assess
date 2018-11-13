@@ -1,0 +1,39 @@
+{
+	"name": "@creatartis/ludorum-player-assess",
+	"description": "Player assessment in the Ludorum framework.",
+	"keywords": [
+		"board-game",
+		"board-game-framework",
+		"artificial-intelligence",
+		"artificial-players",
+		"javascript"
+	],
+	"version": "0.0.1",
+	"author": {
+		"name": "Leonardo Val",
+		"email": "leonardo.val@creatartis.com"
+	},
+	"homepage": "http://creatartis.com",
+	"contributors": [],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/LeonardoVal/ludorum-player-assess.js"
+	},
+	"main": "build/ludorum-player-assess.min.js",
+	"files": [
+		"build",
+		"LICENSE.md"
+	],
+	"dependencies": {
+		"creatartis-base": "~0.1.8",
+		"ludorum": "~0.2.1",
+		"sermat": "~0.0.9"
+	},
+	"devDependencies": {
+		"@creatartis/creatartis-grunt": "~0.0.16-alpha"
+	},
+	"scripts": {
+		"test": "grunt"
+	}
+}
