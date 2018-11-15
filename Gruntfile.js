@@ -7,7 +7,7 @@ module.exports = function (grunt) {
 
 	require('@creatartis/creatartis-grunt').config(grunt, {
 		sourceNames: ['__prologue__',
-			'chi-squared',
+			'hypothesis-testing',
 			'__epilogue__'],
 		deps: [
 			{ id: 'creatartis-base', name: 'base' },

@@ -81,7 +81,7 @@ exports.chiSquared1 = function chiSquared1(results1, results2, options) {
 
 // ## Fisher exact test ############################################################################
 
-var __fisherTestP2x2__ = exports.__fisherTestP2x2__ = function __fisherTestP2x2__(a, b, c, d) {
+var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRule(a, b, c, d) {
 	var n = a + b + c + d,
 		factors = new Array(n + 1);
 	[a + b, c + d, a + c, b + d].forEach(function (x) {
@@ -94,7 +94,6 @@ var __fisherTestP2x2__ = exports.__fisherTestP2x2__ = function __fisherTestP2x2_
 			factors[i] = (factors[i] |0) - 1;
 		}
 	});
-	console.log(factors.join(','));//FIXME
 	var r = 1;
 	for (var fi = 2, di = 2; fi <= n || di <= n; ) {
 		if (r <= 1 && fi <= n) {
@@ -112,9 +111,9 @@ var __fisherTestP2x2__ = exports.__fisherTestP2x2__ = function __fisherTestP2x2_
 	return r;
 };
 
-exports.fisherTest = function fisherTest(results1, results2, options) {
+exports.fisherTest = function fisherTest(results1, results2, options) { //FIXME
 	var significance = options && options.significance || 0.05,
-		p = __fisherTestP2x2__(results1[0], results1[2], results2[0], results2[2]);
+		p = hypergeometricRule(results1[0], results1[2], results2[0], results2[2]);
 	return {
 		p: p,
 		comparison: isNaN(p) ? NaN : (p > significance) ? 0 : results1[0] - results2[0]
