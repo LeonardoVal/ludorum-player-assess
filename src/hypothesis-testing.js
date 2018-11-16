@@ -70,16 +70,12 @@ var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRul
 exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
     raiseIf(row1.length !== 2 || row2.length !== 2, "Contingency table should be 2x2!");
     alpha = isNaN(alpha) ? 0.05 : +alpha;
-    var a = row1[0],
-        b = row1[1],
-        c = row2[0],
-        d = row2[1],
-        r1 = a + b,
-        r2 = c + d,
-        c1 = a + c,
-        c2 = b + d,
+    var a = row1[0], b = row1[1],
+        c = row2[0], d = row2[1],
+        r1 = a + b, r2 = c + d,
+        c1 = a + c, c2 = b + d,
         cutoff = Math.abs(a / r1 - c / r2),
-        max_a = Math.max(c1, c2),
+        max_a = Math.min(c1, r1),
         p_value = 0,
         disprop;
     for (a = 0; a <= max_a; a++) {
@@ -94,5 +90,33 @@ exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
     return {
         p_value: p_value,
         comparison: p_value > alpha ? 0 : (row1[0] - row2[0])
+    };
+};
+
+exports.fisher2x3 = function fisher2x3(row1, row2, alpha) {
+    raiseIf(row1.length !== 3 || row2.length !== 3, "Contingency table should be 2x3!");
+    alpha = isNaN(alpha) ? 0.05 : +alpha;
+    var a = row1[0], b = row1[1], c = row1[2],
+        d = row2[0], e = row2[1], f = row2[2],
+        r1 = a + b + c, r2 = d + e + f,
+        c1 = a + d, c2 = b + e, c3 = c + f,
+        cutoff = hypergeometricRule([a, b, c], [d, e, f]),
+        p_value = 0,
+        p;
+    for (a = 0; a <= r1; a++) {
+        for (b = 0; b <= r1 - a; b++) {
+            c = r1 - a - b;
+            d = c1 - a;
+            e = c2 - b;
+            f = c3 - c;
+            p = hypergeometricRule([a, b, c], [d, e, f]);
+            if (p <= cutoff) {
+                p_value += p;
+            }
+        }
+    }
+    return {
+        p_value: p_value,
+        comparison: p_value > alpha ? 0 : (row1[0] - row2[0] || (row1[1] - row[1]) / (c2 + 1))
     };
 };
