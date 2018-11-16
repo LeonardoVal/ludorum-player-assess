@@ -10,6 +10,7 @@
 */
 function __init__(base, Sermat, ludorum) { "use strict";
 // Import synonyms. ////////////////////////////////////////////////////////////////////////////////
+	var raiseIf = base.raiseIf;
 
 // Library layout. /////////////////////////////////////////////////////////////////////////////////
 	var exports = {
@@ -51,73 +52,73 @@ exports.compare = function compare(game, player1, player2, opponents, matchCount
 	});
 };
 
-// ## Chi squared test #############################################################################
-
-var CHI_SQUARED_CRITICAL_VALUES = {
-	'0.1': 2.706,
-	'0.05': 3.841,
-	'0.01': 6.635
-};
-
-/** The function `chiSquared1` performs a chi squared independence test. The arguments `result1` and
-`result2` must be arrays with three numbers in this order: amount of matches won, tied and lost. 
-*/
-exports.chiSquared1 = function chiSquared1(results1, results2, options) {
-	var won1 = results1[0], 
-		won2 = results2[0],
-		lost1 = results1[2], 
-		lost2 = results2[2],
-		chiSq = Math.pow(won1 * lost2 - won2 * lost1, 2) * (won1 + won2 + lost1 + lost2) /
-			(won1 + lost1) / (won2 + lost2) / (lost1 + lost2) / (won1 + won2),
-		significance = options && options.significance || 0.05,
-		criticalValue = options && options.criticalValue || 
-			CHI_SQUARED_CRITICAL_VALUES[''+ significance];
-	return {
-		chiSquared: chiSq,
-		comparison: (chiSq < criticalValue) ? 0 : won1 - won2,
-		effect: Math.sqrt(chiSquared / (won1 + won2 + lost1 + lost2))
-	};
-};
-
 // ## Fisher exact test ############################################################################
 
-var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRule(a, b, c, d) {
-	var n = a + b + c + d,
-		factors = new Array(n + 1);
-	[a + b, c + d, a + c, b + d].forEach(function (x) {
-		for (var i = 2; i <= x; i++) {
-			factors[i] = (factors[i] |0) + 1;
-		}
-	});
-	[a, b, c, d, n].forEach(function (x) {
-		for (var i = 2; i <= x; i++) {
-			factors[i] = (factors[i] |0) - 1;
-		}
-	});
-	var r = 1;
-	for (var fi = 2, di = 2; fi <= n || di <= n; ) {
-		if (r <= 1 && fi <= n) {
-			if (factors[fi] > 0) {
-				r *= Math.pow(fi, factors[fi]);
-			}
-			fi++;
-		} else {
-			if (factors[di] < 0) {
-				r *= Math.pow(di, factors[di]);
-			}
-			di++;
-		}
-	}
-	return r;
+var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRule(row1, row2) {
+    var n = 0,
+        rowSums = [0, 0],
+        colSums = row1.map(function (v, i) {
+            rowSums[0] += v;
+            rowSums[1] += row2[i];
+            n += v + row2[i];
+            return v + row2[i];
+        });
+    var factors = new Array(n + 1);
+    rowSums.concat(colSums).forEach(function (x) {
+        for (var i = 2; i <= x; i++) {
+            factors[i] = (factors[i] |0) + 1;
+        }
+    });
+    [n].concat(row1, row2).forEach(function (x) {
+        for (var i = 2; i <= x; i++) {
+            factors[i] = (factors[i] |0) - 1;
+        }
+    });
+    var r = 1;
+    for (var fi = 2, di = 2; fi <= n || di <= n; ) {
+        if (r <= 1 && fi <= n) {
+            if (factors[fi] > 0) {
+                r *= Math.pow(fi, factors[fi]);
+            }
+            fi++;
+        } else {
+            if (factors[di] < 0) {
+                r *= Math.pow(di, factors[di]);
+            }
+            di++;
+        }
+    }
+    return r;
 };
 
-exports.fisherTest = function fisherTest(results1, results2, options) { //FIXME
-	var significance = options && options.significance || 0.05,
-		p = hypergeometricRule(results1[0], results1[2], results2[0], results2[2]);
-	return {
-		p: p,
-		comparison: isNaN(p) ? NaN : (p > significance) ? 0 : results1[0] - results2[0]
-	};
+exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
+    raiseIf(row1.length !== 2 || row2.length !== 2, "Contingency table should be 2x2!");
+    alpha = isNaN(alpha) ? 0.05 : +alpha;
+    var a = row1[0],
+        b = row1[1],
+        c = row2[0],
+        d = row2[1],
+        r1 = a + b,
+        r2 = c + d,
+        c1 = a + c,
+        c2 = b + d,
+        cutoff = Math.abs(a / r1 - c / r2),
+        max_a = Math.max(c1, c2),
+        p_value = 0,
+        disprop;
+    for (a = 0; a <= max_a; a++) {
+        b = r1 - a;
+        c = c1 - a;
+        d = c2 - b;
+        disprop = Math.abs(a / r1 - c / r2);
+        if (disprop >= cutoff) {
+            p_value += hypergeometricRule([a, b], [c, d]);
+        }
+    }
+    return {
+        p_value: p_value,
+        comparison: p_value > alpha ? 0 : (row1[0] - row2[0])
+    };
 };
 
 // See __prologue__.js
