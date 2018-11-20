@@ -26,12 +26,30 @@ function __init__(base, Sermat, ludorum) { "use strict";
 
 Player performance comparisons and tests based on hypothesis testing.
 */
-exports.compare = function compare(game, player1, player2, opponents, matchCount) {
-	player2 = player2 || new ludorum.players.RandomPlayer({ name: 'RandomPlayer' });
-	opponents = opponents || [new ludorum.players.RandomPlayer({ name: 'RandomOpponent' })];
-	matchCount = +matchCount || 400;
-	var contest1 = new ludorum.tournaments.Measurement(game, player1, opponents, matchCount),
-		contest2 = new ludorum.tournaments.Measurement(game, player2, opponents, matchCount);
+
+exports.compare = function compare(args) {
+    raiseIf(!args || !args.game, "Missing `game` argument!");
+    var game = args.game,
+        player1 = args.player1 || new ludorum.players.RandomPlayer({ name: 'RandomPlayer1' }),
+        player2 = args.player2 || new ludorum.players.RandomPlayer({ name: 'RandomPlayer2' }),
+	    opponents = args.opponents || [new ludorum.players.RandomPlayer({ name: 'RandomOpponent' })],
+        matchCount = +args.matchCount || 400,
+        logger = args.logger,
+        contest1 = new ludorum.tournaments.Measurement(game, player1, opponents, matchCount),
+        contest2 = new ludorum.tournaments.Measurement(game, player2, opponents, matchCount),
+        intervalId;
+    if (logger) {
+        logger.info("Starting "+ matchCount*4 +" matches of "+ game.name +".");
+        var matchesPlayed = 0;
+        [contest1, contest2].forEach(function (contest) { 
+            contest.events.on('afterMatch', function () {
+                matchesPlayed++;
+            });
+        });
+        intervalId = setInterval(function () {
+			logger.info("Played "+ matchesPlayed +"/"+ matchCount*4 +" matches.");
+		}, args.logTime || 20000);
+    }
 	return base.Future.all([contest1.run(), contest2.run()]).then(function () {
 		var result = {};
 		game.players.forEach(function (role) {
@@ -49,7 +67,13 @@ exports.compare = function compare(game, player1, player2, opponents, matchCount
 			];
 		});
 		return result;
-	});
+	}).then(function (r) {
+        if (logger) {
+            clearInterval(intervalId);
+            logger.info("Played "+ matchesPlayed +"/"+ matchCount +" matches.");
+        }
+        return r;
+    });
 };
 
 // ## Fisher exact test ############################################################################
