@@ -4,52 +4,51 @@ Player performance comparisons and tests based on hypothesis testing.
 */
 
 exports.compare = function compare(args) {
-    raiseIf(!args || !args.game, "Missing `game` argument!");
-    var game = args.game,
-        player1 = args.player1 || new ludorum.players.RandomPlayer({ name: 'RandomPlayer1' }),
-        player2 = args.player2 || new ludorum.players.RandomPlayer({ name: 'RandomPlayer2' }),
-	    opponents = args.opponents || [new ludorum.players.RandomPlayer({ name: 'RandomOpponent' })],
-        matchCount = +args.matchCount || 400,
-        logger = args.logger,
-        contest1 = new ludorum.tournaments.Measurement(game, player1, opponents, matchCount),
-        contest2 = new ludorum.tournaments.Measurement(game, player2, opponents, matchCount),
-        intervalId;
-    if (logger) {
-        logger.info("Starting "+ matchCount * 4 +" matches of "+ game.name +".");
-        var matchesPlayed = 0;
-        [contest1, contest2].forEach(function (contest) { 
-            contest.events.on('afterMatch', function () {
-                matchesPlayed++;
-            });
-        });
-        intervalId = setInterval(function () {
-			logger.info("Played "+ matchesPlayed +"/"+ matchCount * 4 +" matches.");
-		}, args.logTime || 20000);
-    }
-	return base.Future.all([contest1.run(), contest2.run()]).then(function () {
-		var result = {};
-		game.players.forEach(function (role) {
-			var stats1 = contest1.statistics,
-				stats2 = contest2.statistics;
-			(result[player1.name] || (result[player1.name] = {}))[role] = [
-				stats1.count({ key: 'victories', role: role, player: player1.name }),
-				stats1.count({ key: 'draws', role: role, player: player1.name }),
-				stats1.count({ key: 'defeats', role: role, player: player1.name })
-			];
-			(result[player2.name] || (result[player2.name] = {}))[role] = [
-				stats2.count({ key: 'victories', role: role, player: player2.name }),
-				stats2.count({ key: 'draws', role: role, player: player2.name }),
-				stats2.count({ key: 'defeats', role: role, player: player2.name })
-			];
+	raiseIf(!args || !args.game, "Missing `game` argument!");
+	var game = args.game,
+		players = args.players || [new ludorum.players.RandomPlayer({ name: 'RandomPlayer' })],
+		opponents = args.opponents || [new ludorum.players.RandomPlayer({ name: 'RandomOpponent' })],
+		matchCount = +args.matchCount || 400,
+		logger = args.logger,
+		contests = players.map(function (player) {
+			return new ludorum.tournaments.Measurement(game, player, opponents, matchCount);
+		}),
+		intervalId;
+	if (logger) {
+		logger.info("Starting "+ matchCount * players.length * 2 +" matches of "+ game.name +".");
+		var matchesPlayed = 0;
+		contests.forEach(function (contest) { 
+			contest.events.on('afterMatch', function () {
+				matchesPlayed++;
+			});
 		});
-		return result;
+		intervalId = setInterval(function () {
+			logger.info("Played "+ matchesPlayed +"/"+ matchCount * players.length * 2 +" matches.");
+		}, args.logTime || 20000);
+	}
+	return base.Future.all(contests.map(function (contest) {
+		return contest.run();
+	})).then(function () {
+		return contests.map(function (contest, i) {
+			var stats = contest.statistics,
+				player = players[i],
+				r = base.iterable(game.players).map(function (role) {
+					return [role, [
+						stats.count({ key: 'victories', role: role, player: player.name }),
+						stats.count({ key: 'draws',     role: role, player: player.name }),
+						stats.count({ key: 'defeats',   role: role, player: player.name })
+					]];
+				}).toObject();
+			r.player = player.name;
+			return r;
+		});
 	}).then(function (r) {
-        if (logger) {
-            clearInterval(intervalId);
-            logger.info("Played "+ matchesPlayed +"/"+ matchCount +" matches.");
-        }
-        return r;
-    });
+		if (logger) {
+			clearInterval(intervalId);
+			logger.info("Played "+ matchesPlayed +"/"+ matchCount * players.length * 2 +" matches.");
+		}
+		return r;
+	});
 };
 
 // ## Fisher exact test ############################################################################
