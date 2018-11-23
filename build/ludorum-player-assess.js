@@ -124,7 +124,7 @@ exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
 	   cutoff = Math.abs(a / r1 - c / r2),
 	   max_a = Math.min(r1, c1),
         p_value = 0,
-        disprop;
+        disprop, p;
     for (a = 0; a <= max_a; a++) {
 		b = r1 - a;
 		c = c1 - a;
@@ -132,7 +132,8 @@ exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
 		if (d >= 0) {
 			disprop = Math.abs(a / r1 - c / r2);
 			if (disprop >= cutoff) {
-				p_value += hypergeometricRule([a, b], [c, d]);
+				p = hypergeometricRule([a, b], [c, d]);
+				p_value += p;
 			}
 		}
     }

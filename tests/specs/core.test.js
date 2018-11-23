@@ -20,10 +20,16 @@ define(['creatartis-base', 'ludorum', 'ludorum-player-assess'], function (base, 
 				var r = assess.fisher2x2(row1, row2, alpha);
 				expect(r.comparison).toBe(expectedComparison);
 				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
+				r = assess.fisher2x2(row2, row1, alpha);
+				expect(r.comparison).toBe(-expectedComparison);
+				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
 			}
 			function test2x3(row1, row2, alpha, expectedPValue, expectedComparison) {
 				var r = assess.fisher2x3(row1, row2, alpha);
 				expect(r.comparison).toBe(expectedComparison);
+				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
+				r = assess.fisher2x3(row2, row1, alpha);
+				expect(r.comparison).toBe(-expectedComparison);
 				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
 			}
 			var alpha = 0.05;
@@ -40,10 +46,15 @@ define(['creatartis-base', 'ludorum', 'ludorum-player-assess'], function (base, 
 			test2x3([386, 13, 1], [395, 4, 1], alpha, 0.04669, -9);
 			test2x3([386, 13, 1], [395, 4, 1], 0.01, 0.04669, 0);
 
-			test2x2([28, 10], [19, 10], alpha, 0.03580, -9);
-			test2x2([28, 10], [19, 10], 0.01, 0.03580, 0);
-			test2x3([28, 13, 10], [19, 7, 10], alpha, 0.03560, -9);
-			test2x3([28, 13, 10], [19, 7, 10], 0.01, 0.03560, 0);
+			test2x2([28, 10], [19, 10], alpha, 0.59160, 0);
+			test2x2([28, 10], [19, 10], 0.01, 0.59160, 0);
+			test2x3([28, 13, 10], [19, 7, 10], alpha, 0.64661, 0);
+			test2x3([28, 13, 10], [19, 7, 10], 0.01, 0.64661, 0);
+
+			test2x2([28, 10], [29, 1], alpha, 0.01738, -1);
+			test2x2([28, 10], [29, 1], 0.01, 0.01738, 0);
+			test2x3([28, 13, 10], [29, 17, 1], alpha, 0.01799, -1);
+			test2x3([28, 13, 10], [29, 17, 1], 0.01, 0.01799, 0);
 		});
 	}); // layout
 
