@@ -53,6 +53,14 @@ exports.compare = function compare(args) {
 
 // ## Fisher exact test ############################################################################
 
+/** Part of Fisher's exact test is the hypergeometric rule, which is used to calculate the 
+probability of a given contingency table.
+
+The formula is $ p=\frac{(a+b)!(c+d)!(a+c)!(b+d)!}{a!b!c!d!n!} $. Calculating all factorials can 
+overflow the 64 bits double floating point precision, and even if it does not is quite inefficient. 
+This algorithm lists all factors (and divisors), simplifying the calculation as much as possible, 
+and ordering multiplications and divisions to minimize the chance of overflow.
+*/
 var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRule(row1, row2) {
     var n = 0,
         rowSums = [0, 0],
