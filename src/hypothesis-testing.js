@@ -61,7 +61,7 @@ overflow the 64 bits double floating point precision, and even if it does not is
 This algorithm lists all factors (and divisors), simplifying the calculation as much as possible, 
 and ordering multiplications and divisions to minimize the chance of overflow.
 */
-var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRule(row1, row2) {
+var hypergeometricRule = statistics.hypergeometricRule = function hypergeometricRule(row1, row2) {
     var n = 0,
         rowSums = [0, 0],
         colSums = row1.map(function (v, i) {
@@ -98,7 +98,7 @@ var hypergeometricRule = exports.hypergeometricRule = function hypergeometricRul
     return r;
 };
 
-exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
+statistics.fisher2x2 = function fisher2x2(row1, row2, alpha) {
     raiseIf(row1.length !== 2 || row2.length !== 2, "Contingency table should be 2x2!");
     alpha = isNaN(alpha) ? 0.05 : +alpha;
     var a = row1[0], b = row1[1],
@@ -127,7 +127,7 @@ exports.fisher2x2 = function fisher2x2(row1, row2, alpha) {
     };
 };
 
-exports.fisher2x3 = function fisher2x3(row1, row2, alpha) {
+statistics.fisher2x3 = function fisher2x3(row1, row2, alpha) {
 	raiseIf(row1.length !== 3 || row2.length !== 3, "Contingency table should be 2x3!");
 	alpha = isNaN(alpha) ? 0.05 : +alpha;
 	var a = row1[0], b = row1[1], c = row1[2],

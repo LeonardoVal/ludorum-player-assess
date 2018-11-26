@@ -11,5 +11,7 @@ function __init__(base, Sermat, ludorum) { "use strict";
 			__init__: __init__,
 			__dependencies__: [base, Sermat], ludorum,
 			__SERMAT__: { include: [base, ludorum] }
-		}
+		},
+		/* Namespace for statistical functions and utilities */
+		statistics = exports.statistics = { }
 	;

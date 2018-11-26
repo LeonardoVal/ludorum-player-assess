@@ -5,7 +5,10 @@ define(['creatartis-base', 'ludorum', 'ludorum-player-assess'], function (base, 
 	describe("Library", function () { /////////////////////////////////////////////////////////////
 		it("layout", function () {
 			expect(typeof assess.compare).toBe('function');
-			expect(typeof assess.fisher2x2).toBe('function');
+			expect(typeof assess.statistics).toBe('object');
+			expect(typeof assess.statistics.hypergeometricRule).toBe('function');
+			expect(typeof assess.statistics.fisher2x2).toBe('function');
+			expect(typeof assess.statistics.fisher2x3).toBe('function');
 		});
 
 		/** Both 2x2 and 2x3 Fisher's exact tests can be verified with the following R code:
@@ -16,19 +19,21 @@ define(['creatartis-base', 'ludorum', 'ludorum-player-assess'], function (base, 
 		```
 		*/
 		it('fisher tests', function () {
+			var stats = assess.statistics;
+
 			function test2x2(row1, row2, alpha, expectedPValue, expectedComparison) {
-				var r = assess.fisher2x2(row1, row2, alpha);
+				var r = stats.fisher2x2(row1, row2, alpha);
 				expect(r.comparison).toBe(expectedComparison);
 				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
-				r = assess.fisher2x2(row2, row1, alpha);
+				r = stats.fisher2x2(row2, row1, alpha);
 				expect(r.comparison).toBe(-expectedComparison);
 				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
 			}
 			function test2x3(row1, row2, alpha, expectedPValue, expectedComparison) {
-				var r = assess.fisher2x3(row1, row2, alpha);
+				var r = stats.fisher2x3(row1, row2, alpha);
 				expect(r.comparison).toBe(expectedComparison);
 				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
-				r = assess.fisher2x3(row2, row1, alpha);
+				r = stats.fisher2x3(row2, row1, alpha);
 				expect(r.comparison).toBe(-expectedComparison);
 				expect(r.p_value).toBeCloseTo(expectedPValue, 5);
 			}
