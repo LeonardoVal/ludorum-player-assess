@@ -8,6 +8,7 @@ module.exports = function (grunt) {
 	require('@creatartis/creatartis-grunt').config(grunt, {
 		sourceNames: ['__prologue__',
 			'hypothesis-testing',
+			'Scanner',
 			'__epilogue__'],
 		deps: [
 			{ id: 'creatartis-base', name: 'base' },
