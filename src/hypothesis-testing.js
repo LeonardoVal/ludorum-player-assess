@@ -98,6 +98,18 @@ var hypergeometricRule = statistics.hypergeometricRule = function hypergeometric
     return r;
 };
 
+/** Fisher's exact test for contingency tables of 2 rows per 2 columns. Both arguments `row1` and
+`row2` must be arrays of two possitive integers, and `alpha` indicates the significance of the
+hypothesis test (5% or 0.05 by default).
+
+The result is an object with:
+
++ `p_value`: The _p_ value for the test.
+
++ `comparison`: A number complaint with sorting functions (i.e. negative if `row1` is less than 
+`row2`, possitive if `row1` is greater than `row2`, zero otherwise). If the p value is greater than
+`alpha` the comparison is zero, else the difference of the values of the first column is returned.
+*/
 statistics.fisher2x2 = function fisher2x2(row1, row2, alpha) {
     raiseIf(row1.length !== 2 || row2.length !== 2, "Contingency table should be 2x2!");
     alpha = isNaN(alpha) ? 0.05 : +alpha;
@@ -127,6 +139,20 @@ statistics.fisher2x2 = function fisher2x2(row1, row2, alpha) {
     };
 };
 
+/** Fisher's exact test for contingency tables of 2 rows per 3 columns. Both arguments `row1` and
+`row2` must be arrays of three possitive integers, and `alpha` indicates the significance of the
+hypothesis test (5% or 0.05 by default).
+
+The result is an object with:
+
++ `p_value`: The _p_ value for the test.
+
++ `comparison`: A number complaint with sorting functions (i.e. negative if `row1` is less than 
+`row2`, possitive if `row1` is greater than `row2`, zero otherwise). If the p value is greater than
+`alpha` the comparison is zero. Else the difference of the values of the first column is returned if
+not zero. Else the difference of the values of the second column normalized between 0 and 1 is 
+returned.
+*/
 statistics.fisher2x3 = function fisher2x3(row1, row2, alpha) {
 	raiseIf(row1.length !== 3 || row2.length !== 3, "Contingency table should be 2x3!");
 	alpha = isNaN(alpha) ? 0.05 : +alpha;
