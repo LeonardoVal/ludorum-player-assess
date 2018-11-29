@@ -7,7 +7,7 @@ exports.compare = function compare(args) {
 	raiseIf(!args || !args.game, "Missing `game` argument!");
 	var game = args.game,
 		players = args.players || [new ludorum.players.RandomPlayer({ name: 'RandomPlayer' })],
-		opponents = args.opponents || [new ludorum.players.RandomPlayer({ name: 'RandomOpponent' })],
+		opponents = args.opponents || [new ludorum.players.RandomPlayer({ name: '__RandomOpponent__' })],
 		matchCount = +args.matchCount || 400,
 		logger = args.logger,
 		contests = players.map(function (player) {
@@ -29,25 +29,14 @@ exports.compare = function compare(args) {
 	return base.Future.all(contests.map(function (contest) {
 		return contest.run();
 	})).then(function () {
-		return contests.map(function (contest, i) {
-			var stats = contest.statistics,
-				player = players[i],
-				r = base.iterable(game.players).map(function (role) {
-					return [role, [
-						stats.count({ key: 'victories', role: role, player: player.name }),
-						stats.count({ key: 'draws',     role: role, player: player.name }),
-						stats.count({ key: 'defeats',   role: role, player: player.name })
-					]];
-				}).toObject();
-			r.player = player.name;
-			return r;
-		});
-	}).then(function (r) {
 		if (logger) {
 			clearInterval(intervalId);
 			logger.info("Played "+ matchesPlayed +"/"+ matchCount * players.length * 2 +" matches.");
 		}
-		return r;
+		return statistics.fisherWithTournaments({
+			game: game,
+			tournaments: contests
+		});
 	});
 };
 
@@ -183,4 +172,74 @@ statistics.fisher2x3 = function fisher2x3(row1, row2, alpha) {
 		p_value: p_value,
 		comparison: p_value > alpha ? 0 : (row1[0] - row2[0] || (row1[1] - row[1]) / (c2 + 1))
 	};
+};
+
+function tournamentResults(tournaments) {
+	var results = {};
+	tournaments.forEach(function (tournament, i) {
+		var stats = tournament.statistics;
+		base.iterable(stats.__stats__).forEachApply(function (_, stat) {
+			var playerName = stat.keys.player,
+				role = stat.keys.role;
+			if (!results[playerName]) {
+				results[playerName] = {};
+			}
+			if (!results[playerName][role]) {
+				results[playerName][role] = [0, 0, 0];
+			}
+			var r = results[playerName][role];
+			if (stat.keys.key === 'victories') {
+				r[0] += stat.count();
+			} else if (stat.keys.key === 'draws') {
+				r[1] += stat.count();
+			} else if (stat.keys.key === 'defeats') {
+				r[2] += stat.count();
+			}
+		});
+	});
+	return results;
+}
+
+/**
+*/ 
+statistics.fisherWithTournaments = function fisherWithTournament(args) {
+	var tournaments = args.tournaments || args.tournament && [args.tournament],
+		game = args.game || tournaments[0].game,
+		players = args.players && args.players.map(function (p) {
+			return p.name;
+		}),
+		alpha = isNaN(args.alpha) ? 0.05 : +args.alpha,
+		logger = args.logger,
+		_tournamentResults = tournamentResults(tournaments),
+		result = {};
+	if (logger) {
+		logger.info("Analyzing tournament results for "+ game.name +".");
+	}
+	game.players.forEach(function (role) {
+		if (!result[role]) {
+			result[role] = { };
+		}
+		base.iterable(Object.keys(_tournamentResults)).combinations(2).forEachApply(function (p1, p2) {
+			if (players) {
+				if (players.indexOf(p1) < 0 || players.indexOf(p2) < 0) {
+					return; // Break, since one of the players is not in the `players` list.
+				}
+			} else {
+				if (/^__.*__$/.test(p1) || /^__.*__$/.test(p2)) {
+					return; // Break, since players named with `__name__` are ignored.
+				}
+			}
+			if (logger) {
+				logger.info("Performing Fisher exact test for "+ p1 +" vs "+  p2 +".");
+			}
+			var r1 = _tournamentResults[p1][role],
+				r2 = _tournamentResults[p2][role];
+			result[role][p1 +'|'+ p2] = {
+				'won/lost': statistics.fisher2x2([r1[0], r1[2]], [r2[0], r1[2]], alpha),
+				'won/tied+lost': statistics.fisher2x2([r1[0], r1[1] + r1[2]], [r2[0], r1[2] + r1[2]], alpha),
+				'won/tied/lost': statistics.fisher2x3(r1, r2, alpha)
+			};
+		});
+	});
+	return result;
 };
