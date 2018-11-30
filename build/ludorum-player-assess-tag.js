@@ -62,7 +62,8 @@ exports.compare = function compare(args) {
 		}
 		return statistics.fisherWithTournaments({
 			game: game,
-			tournaments: contests
+			tournaments: contests,
+			logger: logger
 		});
 	});
 };
@@ -247,25 +248,26 @@ statistics.fisherWithTournaments = function fisherWithTournament(args) {
 			result[role] = { };
 		}
 		base.iterable(Object.keys(_tournamentResults)).combinations(2).forEachApply(function (p1, p2) {
-			if (players) {
-				if (players.indexOf(p1) < 0 || players.indexOf(p2) < 0) {
-					return; // Break, since one of the players is not in the `players` list.
+			var proceed = players ?
+				(players.indexOf(p1) >= 0 && players.indexOf(p2) >= 0) :
+				// Break, since one of the players is not in the `players` list.
+				(!/^__.*__$/.test(p1) && !/^__.*__$/.test(p2));
+				// Break, since players named with `__name__` are ignored.
+			if (proceed) {
+				if (logger) {
+					logger.info("Performing Fisher exact test for "+ p1 +" vs "+  p2 +".");
 				}
-			} else {
-				if (/^__.*__$/.test(p1) || /^__.*__$/.test(p2)) {
-					return; // Break, since players named with `__name__` are ignored.
-				}
+				var r1 = _tournamentResults[p1][role],
+					r2 = _tournamentResults[p2][role];
+				result[role][p1 +'|'+ p2] = {
+					'won/lost': statistics.fisher2x2([r1[0], r1[2]], [r2[0], r1[2]], alpha),
+					'won/tied+lost': statistics.fisher2x2([r1[0], r1[1] + r1[2]], 
+						[r2[0], r1[2] + r1[2]], alpha),
+					'won<tied>lost': statistics.fisher2x2([r1[0], Math.floor(r1[1] / 2) + r1[2]],
+						[r2[0], Math.floor(r1[2] / 2) + r1[2]], alpha),
+					'won/tied/lost': statistics.fisher2x3(r1, r2, alpha)
+				};
 			}
-			if (logger) {
-				logger.info("Performing Fisher exact test for "+ p1 +" vs "+  p2 +".");
-			}
-			var r1 = _tournamentResults[p1][role],
-				r2 = _tournamentResults[p2][role];
-			result[role][p1 +'|'+ p2] = {
-				'won/lost': statistics.fisher2x2([r1[0], r1[2]], [r2[0], r1[2]], alpha),
-				'won/tied+lost': statistics.fisher2x2([r1[0], r1[1] + r1[2]], [r2[0], r1[2] + r1[2]], alpha),
-				'won/tied/lost': statistics.fisher2x3(r1, r2, alpha)
-			};
 		});
 	});
 	return result;
