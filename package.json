@@ -31,7 +31,8 @@
 		"sermat": "~0.0.9"
 	},
 	"devDependencies": {
-		"@creatartis/creatartis-grunt": "~0.0.16-alpha"
+		"@creatartis/creatartis-grunt": "~0.0.16-alpha",
+		"@creatartis/ludorum-game-mancala": "~0.1.1"
 	},
 	"scripts": {
 		"test": "grunt"
