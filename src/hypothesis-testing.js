@@ -2,45 +2,6 @@
 
 Player performance comparisons and tests based on hypothesis testing.
 */
-
-exports.compare = function compare(args) {
-	raiseIf(!args || !args.game, "Missing `game` argument!");
-	var game = args.game,
-		players = args.players || [new ludorum.players.RandomPlayer({ name: 'RandomPlayer' })],
-		opponents = args.opponents || [new ludorum.players.RandomPlayer({ name: '__RandomOpponent__' })],
-		matchCount = +args.matchCount || 400,
-		logger = args.logger,
-		contests = players.map(function (player) {
-			return new ludorum.tournaments.Measurement(game, player, opponents, matchCount);
-		}),
-		intervalId;
-	if (logger) {
-		logger.info("Starting "+ matchCount * players.length * 2 +" matches of "+ game.name +".");
-		var matchesPlayed = 0;
-		contests.forEach(function (contest) { 
-			contest.events.on('afterMatch', function () {
-				matchesPlayed++;
-			});
-		});
-		intervalId = setInterval(function () {
-			logger.info("Played "+ matchesPlayed +"/"+ matchCount * players.length * 2 +" matches.");
-		}, args.logTime || 20000);
-	}
-	return base.Future.all(contests.map(function (contest) {
-		return contest.run();
-	})).then(function () {
-		if (logger) {
-			clearInterval(intervalId);
-			logger.info("Played "+ matchesPlayed +"/"+ matchCount * players.length * 2 +" matches.");
-		}
-		return statistics.fisherWithTournaments({
-			game: game,
-			tournaments: contests,
-			logger: logger
-		});
-	});
-};
-
 // ## Fisher exact test ############################################################################
 
 /** Part of Fisher's exact test is the hypergeometric rule, which is used to calculate the 
