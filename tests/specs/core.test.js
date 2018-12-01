@@ -4,7 +4,7 @@ define(['creatartis-base', 'ludorum', 'ludorum-player-assess'], function (base, 
 
 	describe("Library", function () { /////////////////////////////////////////////////////////////
 		it("layout", function () {
-			expect(typeof assess.compare).toBe('function');
+			expect(typeof assess.measure).toBe('function');
 			expect(typeof assess.statistics).toBe('object');
 			expect(typeof assess.statistics.hypergeometricRule).toBe('function');
 			expect(typeof assess.statistics.fisher2x2).toBe('function');

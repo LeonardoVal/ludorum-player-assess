@@ -9,6 +9,7 @@ module.exports = function (grunt) {
 		sourceNames: ['__prologue__',
 			'hypothesis-testing',
 			'Scanner',
+			'assess',
 			'__epilogue__'],
 		deps: [
 			{ id: 'creatartis-base', name: 'base' },
