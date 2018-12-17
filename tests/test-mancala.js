@@ -16,7 +16,7 @@ var RANDOM = new ludorum.players.RandomPlayer({ name: "RANDOM" }),
 assess.config({ logger: LOGGER });
 assess.measure([RANDOM, MCTS50, MCTS100])
 .playing(MANCALA)
-.againstRandom({ matchCount: 40 })
+.againstRandom({ matchCount: 400 })
 .then(function (r) {
 	console.log(r.Mancala);
 });
